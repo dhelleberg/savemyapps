@@ -77,9 +77,8 @@ public class HostCommService extends Service {
 
 
 			//TODO: check USB status && ADB Status otherwise it doesn't make any sense to continue here
-
-			//TODO: enqueue Command
-			//DEMO comman
+			//TODO: we need a ping command, which gets into the queue every now & then. Otherwise we never detect a gone client before we send a real command :(
+			
 			int command = msg.arg2;
 			switch (command) {
 			case COMMAND_BACKUP_PACKAGE:
@@ -122,7 +121,7 @@ public class HostCommService extends Service {
 							try {
 								socket = new ServerSocket(7676);
 							} catch (IOException e1) {
-								// TODO Auto-generated catch block
+								// TODO HAS TO BE HANDLED ELSEWHERE
 								e1.printStackTrace();
 							}
 							while(true)
@@ -132,6 +131,9 @@ public class HostCommService extends Service {
 									Socket connectedSocket = socket.accept();
 
 									connectionStatus = CONNECTED;
+									
+									connectedSocket.setKeepAlive(true);
+									
 									if(BuildConfig.DEBUG)
 										Log.v(TAG, "Socket connected!" + connectedSocket.getRemoteSocketAddress());
 
@@ -147,8 +149,7 @@ public class HostCommService extends Service {
 										Command cmd = null;
 										try {
 											cmd = commandsToSend.take();
-										} catch (InterruptedException e) {
-											// TODO Auto-generated catch block
+										} catch (InterruptedException e) {											
 											e.printStackTrace();
 											throw e;
 										}
@@ -191,7 +192,6 @@ public class HostCommService extends Service {
 									Log.v(TAG,"Client connection gone, re-open socket...");
 								}
 							}
-
 						}
 					});
 					connectorThread.start();

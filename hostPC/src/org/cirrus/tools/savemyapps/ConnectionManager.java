@@ -46,7 +46,10 @@ public class ConnectionManager {
 
 	private Gson gson = null;
 
-	public void init() {
+	private SaveMyAppsDaemon saveMyAppsDaemon;
+
+	public void init(SaveMyAppsDaemon saveMyAppsDaemon) {
+		this.saveMyAppsDaemon = saveMyAppsDaemon; 
 		this.adbWrapper = new ADBWrapper();
 		this.adbWrapper.init(this);
 		gson = new GsonBuilder().create();
@@ -75,6 +78,7 @@ public class ConnectionManager {
 					Scanner sc = null;
 					try{
 						socket = new Socket("localhost", 7676);
+						socket.setKeepAlive(true);
 
 						out = new PrintWriter(socket.getOutputStream(), true);
 						in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -84,6 +88,7 @@ public class ConnectionManager {
 						String greeting = sc.nextLine();
 						logger.fine("got greeting: "+greeting);
 						connectionState = STATE_CONNECTED;
+						saveMyAppsDaemon.setConnectionState(connectionState);
 						while(sc.hasNext())
 						{
 							String line = sc.nextLine();
@@ -107,6 +112,7 @@ public class ConnectionManager {
 					finally
 					{
 						connectionState = STATE_NOT_CONNECTED;
+						saveMyAppsDaemon.setConnectionState(connectionState);
 					}
 				}
 

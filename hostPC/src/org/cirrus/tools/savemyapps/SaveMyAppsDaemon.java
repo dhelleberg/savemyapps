@@ -28,12 +28,15 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.logging.LogManager;
 
-public class SaveMyAppsDeamon {
+public class SaveMyAppsDaemon {
 
 	private ConnectionManager connectionManager;
+	private Image imageNotConnected;
+	private Image imageConnected;
+	private TrayIcon trayIcon;
 	
 	public static void main(String[] args) {
-		SaveMyAppsDeamon saveMyAppsDeamon = new SaveMyAppsDeamon();
+		SaveMyAppsDaemon saveMyAppsDeamon = new SaveMyAppsDaemon();
 		saveMyAppsDeamon.init();
 	}
 
@@ -41,9 +44,20 @@ public class SaveMyAppsDeamon {
 		initLogging();
 		initTray();
 		this.connectionManager = new ConnectionManager();
-		this.connectionManager.init();
+		this.connectionManager.init(this);
 	}
 
+	public void setConnectionState(int state)
+	{
+		switch (state) {
+		case ConnectionManager.STATE_CONNECTED:
+			trayIcon.setImage(imageConnected);
+			break;
+		case ConnectionManager.STATE_NOT_CONNECTED:
+			trayIcon.setImage(imageNotConnected);
+			break;
+		}
+	}
 
 	private void initLogging() {
 		System.setProperty( "java.util.logging.config.file", "logging.properties" );
@@ -61,11 +75,12 @@ public class SaveMyAppsDeamon {
 
 	private void initTray()
 	{
-		final TrayIcon trayIcon;
+		
 		if (SystemTray.isSupported()) {
 
 			SystemTray tray = SystemTray.getSystemTray();
-			Image image = Toolkit.getDefaultToolkit().getImage("android-tray.gif");
+			imageConnected = Toolkit.getDefaultToolkit().getImage("android-tray.gif");
+			imageNotConnected = Toolkit.getDefaultToolkit().getImage("android-tray-nc.gif");
 
 			/*MouseListener mouseListener = new MouseListener() {
 
@@ -110,7 +125,8 @@ public class SaveMyAppsDeamon {
 			popup.add(reconnectItem);
 			popup.add(exitItem);
 
-			trayIcon = new TrayIcon(image, "Save My Apps", popup);
+			trayIcon = new TrayIcon(imageNotConnected, "Save My Apps", popup);
+			
 
 			ActionListener actionListener = new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
