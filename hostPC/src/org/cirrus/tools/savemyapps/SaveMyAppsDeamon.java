@@ -30,23 +30,18 @@ import java.util.logging.LogManager;
 
 public class SaveMyAppsDeamon {
 
+	private ConnectionManager connectionManager;
+	
 	public static void main(String[] args) {
 		SaveMyAppsDeamon saveMyAppsDeamon = new SaveMyAppsDeamon();
 		saveMyAppsDeamon.init();
 	}
 
-
-	private ConnectionManager connectionManager;
-
-
 	private void init() {
 		initLogging();
-
 		initTray();
 		this.connectionManager = new ConnectionManager();
 		this.connectionManager.init();
-
-
 	}
 
 
@@ -72,7 +67,7 @@ public class SaveMyAppsDeamon {
 			SystemTray tray = SystemTray.getSystemTray();
 			Image image = Toolkit.getDefaultToolkit().getImage("android-tray.gif");
 
-			MouseListener mouseListener = new MouseListener() {
+			/*MouseListener mouseListener = new MouseListener() {
 
 				public void mouseClicked(MouseEvent e) {
 					System.out.println("Tray Icon - Mouse clicked!");                 
@@ -93,21 +88,29 @@ public class SaveMyAppsDeamon {
 				public void mouseReleased(MouseEvent e) {
 					System.out.println("Tray Icon - Mouse released!");                 
 				}
-			};
+			};*/
 
 			ActionListener exitListener = new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					System.out.println("Exiting...");
 					System.exit(0);
 				}
 			};
 
-			PopupMenu popup = new PopupMenu();
-			MenuItem defaultItem = new MenuItem("Exit");
-			defaultItem.addActionListener(exitListener);
-			popup.add(defaultItem);
+			ActionListener reconnectListener = new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					connectionManager.reconnect();
+				}
+			};
 
-			trayIcon = new TrayIcon(image, "Tray Demo", popup);
+			PopupMenu popup = new PopupMenu();
+			MenuItem exitItem = new MenuItem("Exit");
+			MenuItem reconnectItem = new MenuItem("Reconnect");
+			exitItem.addActionListener(exitListener);
+			reconnectItem.addActionListener(reconnectListener);
+			popup.add(reconnectItem);
+			popup.add(exitItem);
+
+			trayIcon = new TrayIcon(image, "Save My Apps", popup);
 
 			ActionListener actionListener = new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -119,7 +122,7 @@ public class SaveMyAppsDeamon {
 
 			trayIcon.setImageAutoSize(true);
 			trayIcon.addActionListener(actionListener);
-			trayIcon.addMouseListener(mouseListener);
+			//trayIcon.addMouseListener(mouseListener);
 
 			try {
 				tray.add(trayIcon);

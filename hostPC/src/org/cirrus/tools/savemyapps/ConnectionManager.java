@@ -35,6 +35,11 @@ public class ConnectionManager {
 
 	Logger logger = Logger.getLogger(ConnectionManager.class.getName());
 
+	public static final int STATE_CONNECTED = 1;
+	public static final int STATE_NOT_CONNECTED = 2;
+
+	private int connectionState = STATE_NOT_CONNECTED;
+
 	private ADBWrapper adbWrapper;
 	private IDevice currentDevice = null;
 	private Thread connectionThread = null;
@@ -44,7 +49,6 @@ public class ConnectionManager {
 	public void init() {
 		this.adbWrapper = new ADBWrapper();
 		this.adbWrapper.init(this);
-
 		gson = new GsonBuilder().create();
 	}
 
@@ -55,7 +59,6 @@ public class ConnectionManager {
 		{
 			this.currentDevice = device;
 			this.adbWrapper.createPortForward(currentDevice);
-			//TODO: create socket
 			this.createSocketConnection(currentDevice);
 		}
 	}
@@ -66,13 +69,22 @@ public class ConnectionManager {
 		{
 			this.connectionThread = new Thread(new Runnable() {
 				public void run() {
+					Socket socket = null;
+					PrintWriter out = null;
+					BufferedReader in = null;
+					Scanner sc = null;
 					try{
-						Socket socket = new Socket("localhost", 7676);
-						PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-						BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+						socket = new Socket("localhost", 7676);
 
-						Scanner sc = new Scanner(in);
-						while(true)
+						out = new PrintWriter(socket.getOutputStream(), true);
+						in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+						sc = new Scanner(in);
+						//logger.fine("Diag: connected: "+socket.isConnected()+ " closed: "+socket.isClosed() +" in: "+socket.isInputShutdown() +" out: "+socket.isOutputShutdown());
+						//read greeting, we do this to make sure that we really have a connection...
+						String greeting = sc.nextLine();
+						logger.fine("got greeting: "+greeting);
+						connectionState = STATE_CONNECTED;
+						while(sc.hasNext())
 						{
 							String line = sc.nextLine();
 							logger.info("recieved: "+line);
@@ -90,7 +102,11 @@ public class ConnectionManager {
 					}
 					catch(Exception e)
 					{
-						e.printStackTrace();
+						e.printStackTrace();						
+					}
+					finally
+					{
+						connectionState = STATE_NOT_CONNECTED;
 					}
 				}
 
@@ -132,5 +148,10 @@ public class ConnectionManager {
 			//TODO: disconnect socket
 			currentDevice = null;
 		}
+	}
+
+	public void reconnect() {
+		// TODO Auto-generated method stub
+
 	}
 }

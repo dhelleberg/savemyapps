@@ -15,6 +15,7 @@ package org.cirrus.mobi.savemyapps.data;
  *   You should have received a copy of the GNU General Public License
  *   along with SaveMyApps.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 import android.graphics.drawable.Drawable;
 
 public class App {

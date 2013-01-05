@@ -26,7 +26,6 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.TimeoutException;
-import com.sun.tools.internal.ws.wsdl.document.jaxws.Exception;
 
 public class ADBWrapper implements IDeviceChangeListener {
 

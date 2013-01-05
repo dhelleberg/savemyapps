@@ -116,75 +116,82 @@ public class HostCommService extends Service {
 
 					connectorThread = new Thread(new Runnable() {
 						public void run() {
+							if(BuildConfig.DEBUG)
+								Log.v(TAG, "Opening Socket...");
+							ServerSocket socket = null;
 							try {
-								if(BuildConfig.DEBUG)
-									Log.v(TAG, "Opening Socket...");
-								ServerSocket socket = new ServerSocket(7676);								
-								Socket connectedSocket = socket.accept();
+								socket = new ServerSocket(7676);
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+							while(true)
+							{
+								try {
+									connectionStatus = SOCKET_OPEN;
+									Socket connectedSocket = socket.accept();
 
-								connectionStatus = CONNECTED;
+									connectionStatus = CONNECTED;
+									if(BuildConfig.DEBUG)
+										Log.v(TAG, "Socket connected!" + connectedSocket.getRemoteSocketAddress());
 
-
-								if(BuildConfig.DEBUG)
-									Log.v(TAG, "Socket connected!" + connectedSocket.getRemoteSocketAddress());
-
-								//read streams
-								PrintWriter out = new PrintWriter(connectedSocket.getOutputStream(), true);
-								BufferedReader in = new BufferedReader(new InputStreamReader(connectedSocket.getInputStream()));
-								Scanner inScanner = new Scanner(in);
-
-								while(true)
-								{
-									Command cmd = null;
-									try {
-										cmd = commandsToSend.take();
-									} catch (InterruptedException e) {
-										// TODO Auto-generated catch block
-										e.printStackTrace();
-									}
-									try
+									//read streams
+									PrintWriter out = new PrintWriter(connectedSocket.getOutputStream(), true);
+									BufferedReader in = new BufferedReader(new InputStreamReader(connectedSocket.getInputStream()));
+									Scanner inScanner = new Scanner(in);
+									//send greeting
+									out.write("Hello foreigner... I hope you'll find what you're looking for...\n");
+									out.flush();
+									while(true)
 									{
-										if(cmd != null)
-										{				
-											String json = mGson.toJson(cmd);
-											if(BuildConfig.DEBUG)
-												Log.v(TAG, "gonna send: "+json);
-											out.write(json+"\n");
-											out.flush();
-											//read response
-											String response = "";
-											while(inScanner.hasNextLine())
-											{
-												response = inScanner.nextLine();
-												break;
+										Command cmd = null;
+										try {
+											cmd = commandsToSend.take();
+										} catch (InterruptedException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+											throw e;
+										}
+										try
+										{
+											if(cmd != null)
+											{				
+												String json = mGson.toJson(cmd);
+												if(BuildConfig.DEBUG)
+													Log.v(TAG, "gonna send: "+json);
+												out.write(json+"\n");
+												out.flush();
+												//read response
+												String response = "";
+												while(inScanner.hasNextLine())
+												{
+													response = inScanner.nextLine();
+													break;
+												}
+												if(BuildConfig.DEBUG)
+													Log.v(TAG, "response:"+response);
+												if(response.length() < 1)
+													throw new IOException("Could not get response from client. Reconnect?");
 											}
+										}
+										catch(Exception e)
+										{
+											//outch no longer connected?
 											if(BuildConfig.DEBUG)
-												Log.v(TAG, "response:"+response);
+												Log.v(TAG, "could not send command...", e);
+											//are we still connected?
+											if(BuildConfig.DEBUG)
+												Log.v(TAG, "Diag: connected: "+connectedSocket.isConnected()+ " closed: "+connectedSocket.isClosed() +" in: "+connectedSocket.isInputShutdown() +" out: "+connectedSocket.isOutputShutdown());
+											throw e;
 										}
 									}
-									catch(Exception e)
-									{
-										//outch no longer connected?
-										if(BuildConfig.DEBUG)
-											Log.v(TAG, "could not send command...", e);
-										//are we still connected?
-										if(BuildConfig.DEBUG)
-											Log.v(TAG, "Diag: connected: "+connectedSocket.isConnected()+ " closed: "+connectedSocket.isClosed() +" in: "+connectedSocket.isInputShutdown() +" out: "+connectedSocket.isOutputShutdown());
-									}
-
-								}                
-
-								/*Scanner scanner = new Scanner(in);
-								while(true)
+								}
+								catch(Exception e)
 								{
-									Log.v(TAG, scanner.nextLine());
-								}*/
-
-
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+									Log.v(TAG,"Client connection gone, re-open socket...");
+								}
 							}
+
 						}
 					});
 					connectorThread.start();
