@@ -1,0 +1,5 @@
+this is a simple apps backup / restore application which contains of 2 parts:
+
+an android app which is the main part
+
+a java app running on the pc which needs to be conntected via USB and actually performs the backups via USB (via adb)
