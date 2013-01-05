@@ -9,4 +9,4 @@ target/
 local.properties
 .metadata
 **/local.properties
-**/*.log
+**/*.log*
