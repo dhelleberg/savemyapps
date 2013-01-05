@@ -37,7 +37,7 @@ public class HostCommService extends Service {
 
 	public static final String EXTRA_COMMAND = "EXTRA_CMD";
 	public static final String EXTRA_PARAMS = "EXTRA_PARAMS";
-	
+
 	public static final int COMMAND_CONNECT = 1;
 	public static final int COMMAND_BACKUP_PACKAGE = 2;
 
@@ -68,7 +68,7 @@ public class HostCommService extends Service {
 			int command = msg.arg2;
 			switch (command) {
 			case COMMAND_BACKUP_PACKAGE:
-				
+
 				String[]packages = (String[]) msg.obj;
 				Command cmd = new Command();
 				cmd.command = Command.COMMAND_BACKUP_PACKAGE;
@@ -76,7 +76,7 @@ public class HostCommService extends Service {
 				commandsToSend.add(cmd);
 				break;
 			}
-			
+
 			//check connection status
 			switch (connectionStatus) {
 			case NOT_CONNECTED:
@@ -109,7 +109,7 @@ public class HostCommService extends Service {
 
 								connectionStatus = CONNECTED;
 
-								
+
 								if(BuildConfig.DEBUG)
 									Log.v(TAG, "Socket connected!" + connectedSocket.getRemoteSocketAddress());
 
@@ -137,7 +137,12 @@ public class HostCommService extends Service {
 											out.write(json+"\n");
 											out.flush();
 											//read response
-											String response = inScanner.nextLine();
+											String response = "";
+											while(inScanner.hasNextLine())
+											{
+												response = inScanner.nextLine();
+												break;
+											}
 											if(BuildConfig.DEBUG)
 												Log.v(TAG, "response:"+response);
 										}
@@ -191,13 +196,13 @@ public class HostCommService extends Service {
 		thread.start();
 
 		mGson = new GsonBuilder().create();
-		
+
 		// Get the HandlerThread's Looper and use it for our Handler 
 		mServiceLooper = thread.getLooper();
 		mServiceHandler = new ServiceHandler(mServiceLooper);
-		
+
 		//register as USB attach reciever
-		
+
 	}
 
 

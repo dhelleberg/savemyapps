@@ -4,25 +4,33 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
+import org.cirrus.mobi.savemyapps.shareddata.Command;
+import org.cirrus.mobi.savemyapps.shareddata.Response;
+
 import com.android.ddmlib.IDevice;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.corba.se.spi.orbutil.fsm.Guard.Result;
 
 public class ConnectionManager {
-
-	IDevice currentDevice = null;
 
 	Logger logger = Logger.getLogger(ConnectionManager.class.getName());
 
 	private ADBWrapper adbWrapper;
+	private IDevice currentDevice = null;
+	private Thread connectionThread = null;
 
-	Thread connectionThread = null;
+	private Gson gson = null;
 
 	public void init() {
 		this.adbWrapper = new ADBWrapper();
 		this.adbWrapper.init(this);
 
+		gson = new GsonBuilder().create();
 	}
 
 	public void addDevice(IDevice device) {
@@ -47,13 +55,19 @@ public class ConnectionManager {
 						Socket socket = new Socket("localhost", 7676);
 						PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 						BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-						
+
 						Scanner sc = new Scanner(in);
 						while(true)
 						{
-							logger.info(sc.nextLine());
-							Thread.sleep(5000);
-							out.write("ACK!\n");
+							String line = sc.nextLine();
+							logger.info("recieved: "+line);
+							//we only get commands, do we? Deserialize from json
+							Command cmd = gson.fromJson(line, Command.class);
+							//should we do the work in another thread? nope, let's keep it here for now
+							Response resp = doWork(cmd);
+							String json = gson.toJson(resp);
+							logger.fine("Response: "+json);
+							out.write(json);
 							out.flush();
 						}
 						//out.write("Hello from the client side!\n");
@@ -63,6 +77,34 @@ public class ConnectionManager {
 					{
 						e.printStackTrace();
 					}
+				}
+
+				private Response doWork(Command cmd) {
+					switch (cmd.command) {
+					case Command.COMMAND_BACKUP_PACKAGE:
+						return doBackups(cmd.params);
+					}
+					Response resp = new Response();
+					resp.responseCode = Response.RESPONSE_CMD_NOT_FOUND;
+					resp.message = "Could not find command: "+cmd.command;
+					return resp;
+				}
+
+				private Response doBackups(Map<String, String[]> params) {
+					String[] packages = params.get(Command.PARAM_BACKUP_PACKAGES);
+					Response result = new Response();
+					//try to backup each package
+					try {
+						adbWrapper.backupPackages(packages);
+						result.message="OK";
+						result.responseCode = Response.RESPONSE_OK;
+					}
+					catch(Exception e)
+					{
+						result.message = e.getMessage();
+						result.responseCode = Response.RESPONSE_ERROR;
+					}
+					return result;
 				}
 			});
 			this.connectionThread.start();

@@ -2,6 +2,7 @@ package org.cirrus.tools.savemyapps;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Scanner;
 import java.util.logging.Logger;
 
 import com.android.ddmlib.AdbCommandRejectedException;
@@ -9,6 +10,7 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.TimeoutException;
+import com.sun.tools.internal.ws.wsdl.document.jaxws.Exception;
 
 public class ADBWrapper implements IDeviceChangeListener {
 
@@ -52,7 +54,7 @@ public class ADBWrapper implements IDeviceChangeListener {
 			}
 			trials--;
 		}
-		
+
 	}
 
 	private void findAdb() {
@@ -137,6 +139,33 @@ public class ADBWrapper implements IDeviceChangeListener {
 	public void deviceDisconnected(IDevice device) {
 		logger.info("Device disconnected: "+device.getName());
 		cm.removeDevice(device);		
+	}
+
+	public void backupPackages(String[] packages) throws IOException {
+		StringBuilder packagelist = new StringBuilder();
+		for (String package_: packages) {
+			packagelist.append(package_).append(" ");
+		}
+		Process adbProcess;
+		try {
+			adbProcess = Runtime.getRuntime().exec(adbExec.getAbsolutePath() + " backup -f tmp.ab " + packagelist.toString());
+			adbProcess.waitFor();
+			Scanner sc = new Scanner(adbProcess.getErrorStream());
+			if (sc.hasNext()) {
+				String error = sc.nextLine();
+				logger.severe("error executing adb: "+error);
+				throw new IOException(error);
+			}
+		} catch (IOException e) {
+			logger.severe("Exception executing adb...");
+			e.printStackTrace();
+			throw new IOException(e);
+		} catch (InterruptedException e) {
+			logger.severe("Exception executing adb...");
+			e.printStackTrace();
+			throw new IOException(e);
+		}
+		
 	}
 
 }
