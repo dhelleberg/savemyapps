@@ -37,7 +37,13 @@ public class SaveMyAppsDaemon {
 	
 	public static void main(String[] args) {
 		SaveMyAppsDaemon saveMyAppsDeamon = new SaveMyAppsDaemon();
-		saveMyAppsDeamon.init();
+		try { saveMyAppsDeamon.init();
+		
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+			System.exit(0);
+		}
 	}
 
 	private void init() {
