@@ -34,7 +34,11 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -50,6 +54,8 @@ public class AppsListFragment extends ListFragment implements LoaderManager.Load
 
 	private AppsListAdapter mAdapter = null;
 
+	private ActionMode mMode;
+
 	public AppsListFragment() {
 	}
 	
@@ -57,19 +63,20 @@ public class AppsListFragment extends ListFragment implements LoaderManager.Load
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mPackageManger = getActivity().getPackageManager();
-		getLoaderManager().initLoader(0, null, this);
-
+		getLoaderManager().initLoader(0, null, this);		
 	}
 	
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {	
 		super.onListItemClick(l, v, position, id);
 		
+		if(mMode == null)
+			mMode = getActivity().startActionMode(mActionModeCallback);
 		//testing: kick service
-		Intent serviceIntent = new Intent(getActivity().getApplicationContext(), HostCommService.class);
+		/*Intent serviceIntent = new Intent(getActivity().getApplicationContext(), HostCommService.class);
 		serviceIntent.putExtra(HostCommService.EXTRA_COMMAND, HostCommService.COMMAND_BACKUP_PACKAGE);
 		serviceIntent.putExtra(HostCommService.EXTRA_PARAMS, new String[]{mAdapter.appsList.get(position).packageName});
-		getActivity().startService(serviceIntent);
+		getActivity().startService(serviceIntent);*/
 	}
 
 
@@ -130,8 +137,40 @@ public class AppsListFragment extends ListFragment implements LoaderManager.Load
 
 	}
 
+	private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
+		// Called when the action mode is created; startActionMode() was called
+	    @Override
+	    public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+	        // Inflate a menu resource providing context menu items
+	        MenuInflater inflater = mode.getMenuInflater();
+	        inflater.inflate(R.menu.apps_action_mode, menu);
+	        return true;
+	    }
+
+		@Override
+		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		
+		@Override
+		public void onDestroyActionMode(ActionMode mode) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+	};
 
 
+	/**
+	 * Loader stuff 
+	 */
+	
 	public static class AppsListLoader extends AsyncTaskLoader<List<App>>
 	{
 		private List<App> mAppList;
@@ -212,7 +251,8 @@ public class AppsListFragment extends ListFragment implements LoaderManager.Load
 		else
 		{
 			this.mAdapter.setAppsList(apps);
-		}					
+		}
+		getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 	}
 
 	@Override

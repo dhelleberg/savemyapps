@@ -26,7 +26,8 @@
     android:paddingStart="6dip"
     android:paddingTop="5dip"
     android:paddingBottom="5dip"
-    android:gravity="center_vertical" >
+    android:gravity="center_vertical"
+    android:background="?android:attr/activatedBackgroundIndicator" >
 
     <ImageView android:id="@+id/app_icon"
         android:layout_width="@android:dimen/app_icon_size"
