@@ -3,7 +3,7 @@
 
     <item android:id="@+id/menu_backup"
         android:icon="@drawable/ic_action_arrow_right_top"
-        android:showAsAction="always|withText"
+        android:showAsAction="withText|always"
         android:title="@string/action_backup">
     </item>
     <item

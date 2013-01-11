@@ -7,5 +7,6 @@
     <string name="title_activity_apps_list">AppsListActivity</string>
     <string name="actionmode_cancel">Cancel</string>
     <string name="action_backup">Backup</string>
+    <string name="multiple_app_warning">If you backup multiple Apps at once, you need to restore them all at once!</string>
 
 </resources>
