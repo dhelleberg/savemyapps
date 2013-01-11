@@ -49,10 +49,11 @@ public class ConnectionManager {
 	private SaveMyAppsDaemon saveMyAppsDaemon;
 
 	public void init(SaveMyAppsDaemon saveMyAppsDaemon) {
+		gson = new GsonBuilder().create();
 		this.saveMyAppsDaemon = saveMyAppsDaemon; 
 		this.adbWrapper = new ADBWrapper();
 		this.adbWrapper.init(this);
-		gson = new GsonBuilder().create();
+		
 	}
 
 	public void addDevice(IDevice device) {
@@ -92,8 +93,8 @@ public class ConnectionManager {
 						while(sc.hasNext())
 						{
 							String line = sc.nextLine();
-							logger.info("recieved: "+line);
-							//we only get commands, do we? Deserialize from json
+							logger.info("recieved: "+line+ "gson: "+gson);;
+							//we only get commands, do we? Deserialize from json							
 							Command cmd = gson.fromJson(line, Command.class);
 							//should we do the work in another thread? nope, let's keep it here for now
 							Response resp = doWork(cmd);
